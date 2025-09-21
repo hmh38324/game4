@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>色彩陷阱游戏4</title>
+    <title>数字炸弹游戏4</title>
     <style>
         * {
             margin: 0;
@@ -73,14 +73,14 @@
         }
 
         .question-display {
-            font-size: 48px;
+            font-size: 24px;
             font-weight: bold;
             margin: 20px 0;
             padding: 20px;
             border: 2px solid #333;
             border-radius: 10px;
             background: white;
-            min-height: 80px;
+            min-height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -88,29 +88,30 @@
 
         .options-container {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
             margin-top: 20px;
         }
 
         .option-button {
-            padding: 15px 20px;
-            font-size: 18px;
+            padding: 20px;
+            font-size: 24px;
             font-weight: bold;
-            border: 2px solid #333;
-            border-radius: 10px;
+            border: 3px solid #333;
+            border-radius: 15px;
             background: white;
             cursor: pointer;
             transition: all 0.3s ease;
-            min-height: 60px;
+            min-height: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
         }
 
         .option-button:hover {
             background: #e0e0e0;
-            transform: scale(1.02);
+            transform: scale(1.05);
         }
 
         .option-button.selected {
@@ -119,16 +120,36 @@
             border-color: #45a049;
         }
 
-        .option-button.correct {
+        .option-button.safe {
             background: #4CAF50;
             color: white;
             border-color: #45a049;
         }
 
-        .option-button.wrong {
+        .option-button.bomb {
             background: #f44336;
             color: white;
             border-color: #da190b;
+            animation: explode 0.5s ease-in-out;
+        }
+
+        .option-button.disabled {
+            background: #ccc;
+            color: #999;
+            border-color: #999;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .option-button.disabled:hover {
+            transform: none;
+            background: #ccc;
+        }
+
+        @keyframes explode {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
         }
 
         .progress-container {
@@ -633,9 +654,9 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>🎨 色彩陷阱4</h1>
+        <h1>💣 数字炸弹4</h1>
         <div class="game-info">
-            <p>观察有颜色的汉字，选择正确的答案！答对6道题目即可完成游戏！</p>
+            <p>在1-10中选择数字，避开炸弹！选择3次安全数字即可完成游戏！</p>
         </div>
         
         <div class="controls">
@@ -656,12 +677,12 @@
                 </div>
                 <div class="progress-container">
                     <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill">0/6</div>
+                        <div class="progress-fill" id="progressFill">0/3</div>
                     </div>
-                    <div class="progress-text">已答对题目进度</div>
+                    <div class="progress-text">已选择安全数字进度</div>
                 </div>
                 <div class="score">
-                    <p>答题次数: <span id="moveCount">0</span>   用时: <span id="elapsedTime">00:00</span>   剩余次数: <span id="remainingAttempts">—</span>   当前用户: <span id="userInfo"></span></p>
+                    <p>选择次数: <span id="moveCount">0</span>   用时: <span id="elapsedTime">00:00</span>   剩余次数: <span id="remainingAttempts">—</span>   当前用户: <span id="userInfo"></span></p>
                 </div>
             </div>
             
@@ -705,8 +726,8 @@
     <div class="overlay" id="overlay"></div>
     <div class="win-message" id="winMessage">
         <h2>🎉 恭喜完成！</h2>
-        <p>你成功答对了所有6道题目！</p>
-        <p>总答题次数: <span id="finalMoves">0</span></p>
+        <p>你成功避开了所有炸弹！</p>
+        <p>总选择次数: <span id="finalMoves">0</span></p>
         <p>总用时: <span id="finalTime">00:00</span></p>
         <button onclick="closeWinMessage()">关闭</button>
     </div>
@@ -753,26 +774,20 @@
         // Cloudflare Worker API 基础地址
         const WORKER_BASE_URL = 'https://digitalbombapi.biboran.top';
         
-        // 颜色和汉字选项
-        const COLORS = ['红', '棕', '绿', '橙', '紫', '蓝', '粉'];
-        const COLOR_VALUES = {
-            '红': '#ff0000',
-            '棕': '#8B4513',
-            '绿': '#008000',
-            '橙': '#ffa500',
-            '紫': '#800080',
-            '蓝': '#0000ff',
-            '粉': '#ff69b4'
-        };
+        // 数字炸弹游戏配置
+        const NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        const MAX_SAFE_CHOICES = 3; // 需要选择3次安全数字才能获胜
         
-        class ColorTrapGame {
+        class NumberBombGame {
             constructor() {
-                this.currentQuestion = null;
-                this.moveCount = 0;
+                this.bombNumber = null; // 炸弹数字
+                this.safeChoices = 0; // 已选择的安全数字次数
+                this.moveCount = 0; // 总选择次数
                 this.isGameWon = false;
-                this.correctAnswers = 0; // 已答对的题目数
-                this.answeredQuestions = 0; // 已答题数
-                this.isAnswering = false; // 是否正在答题中
+                this.isGameOver = false;
+                this.isSelecting = false; // 是否正在选择中
+                this.currentRange = { min: 1, max: 10 }; // 当前可选范围
+                this.selectedNumbers = []; // 已选择的数字
                 // 尝试与计时状态
                 this.hasAttemptRecorded = false; // 是否已记录开局
                 this.hasTimerRunning = false; // 是否已开始计时
@@ -808,15 +823,15 @@
             }
 
             init() {
-                this.createQuestionInterface();
+                this.createGameInterface();
                 this.updateUserInfo();
-                // 首次进入游戏时生成第一道题目
+                // 首次进入游戏时开始新游戏
                 setTimeout(() => {
-                    this.generateNewQuestion();
+                    this.startNewGame();
                 }, 500); // 延迟500ms确保界面完全加载
             }
 
-            createQuestionInterface() {
+            createGameInterface() {
                 const questionDisplay = document.getElementById('questionDisplay');
                 const optionsContainer = document.getElementById('optionsContainer');
                 
@@ -825,86 +840,73 @@
                 optionsContainer.innerHTML = '';
             }
 
-            generateNewQuestion() {
-                // 随机选择颜色和汉字
-                const selectedColor = COLORS[Math.floor(Math.random() * COLORS.length)];
-                const selectedCharacter = COLORS[Math.floor(Math.random() * COLORS.length)];
+            startNewGame() {
+                // 重置游戏状态
+                this.bombNumber = Math.floor(Math.random() * 10) + 1; // 1-10随机炸弹
+                this.safeChoices = 0;
+                this.moveCount = 0;
+                this.isGameWon = false;
+                this.isGameOver = false;
+                this.isSelecting = false;
+                this.currentRange = { min: 1, max: 10 };
+                this.selectedNumbers = [];
                 
-                // 创建题目对象
-                this.currentQuestion = {
-                    color: selectedColor,
-                    character: selectedCharacter,
-                    isMatch: selectedColor === selectedCharacter, // 颜色和汉字是否相同
-                    correctAnswer: selectedColor // 正确答案是颜色
-                };
-                
-                this.renderQuestion();
+                // 更新界面
+                this.updateProgress();
+                this.renderGame();
+                this.updateMoveCount();
             }
 
-            renderQuestion() {
+            renderGame() {
                 const questionDisplay = document.getElementById('questionDisplay');
                 const optionsContainer = document.getElementById('optionsContainer');
                 
-                // 显示有颜色的汉字
-                const coloredCharacter = document.createElement('span');
-                coloredCharacter.textContent = this.currentQuestion.character;
-                coloredCharacter.style.color = COLOR_VALUES[this.currentQuestion.color];
-                questionDisplay.innerHTML = '';
-                questionDisplay.appendChild(coloredCharacter);
+                // 显示游戏状态和范围
+                questionDisplay.innerHTML = `
+                    <div style="font-size: 18px; margin-bottom: 10px;">
+                        💣 炸弹范围: ${this.currentRange.min} - ${this.currentRange.max}
+                    </div>
+                    <div style="font-size: 16px; color: #666;">
+                        已选择安全数字: ${this.safeChoices}/${MAX_SAFE_CHOICES}
+                    </div>
+                `;
                 
-                // 生成选项
-                this.generateOptions();
+                // 生成数字卡片
+                this.generateNumberCards();
             }
 
-            generateOptions() {
+            generateNumberCards() {
                 const optionsContainer = document.getElementById('optionsContainer');
                 optionsContainer.innerHTML = '';
                 
-                let options = [];
-                
-                if (this.currentQuestion.isMatch) {
-                    // 颜色和汉字相同：包含正确答案加三个干扰项
-                    options = [this.currentQuestion.correctAnswer];
-                    while (options.length < 4) {
-                        const randomOption = COLORS[Math.floor(Math.random() * COLORS.length)];
-                        if (!options.includes(randomOption)) {
-                            options.push(randomOption);
-                        }
-                    }
-                } else {
-                    // 颜色和汉字不同：包含正确答案、随机汉字，加两个干扰项
-                    options = [
-                        this.currentQuestion.correctAnswer, // 正确答案（颜色）
-                        this.currentQuestion.character // 随机汉字
-                    ];
-                    while (options.length < 4) {
-                        const randomOption = COLORS[Math.floor(Math.random() * COLORS.length)];
-                        if (!options.includes(randomOption)) {
-                            options.push(randomOption);
-                        }
-                    }
-                }
-                
-                // 打乱选项顺序
-                for (let i = options.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [options[i], options[j]] = [options[j], options[i]];
-                }
-                
-                // 创建选项按钮
-                options.forEach((option, index) => {
+                // 创建1-10的数字卡片
+                NUMBERS.forEach(number => {
                     const button = document.createElement('div');
                     button.className = 'option-button';
-                    button.textContent = option;
-                    button.dataset.option = option;
-                    button.addEventListener('click', () => this.selectOption(option));
+                    button.textContent = number;
+                    button.dataset.number = number;
+                    
+                    // 检查是否在可选范围内
+                    const isInRange = number >= this.currentRange.min && number <= this.currentRange.max;
+                    const isSelected = this.selectedNumbers.includes(number);
+                    
+                    if (isSelected) {
+                        button.classList.add('selected');
+                        button.style.pointerEvents = 'none';
+                    } else if (!isInRange) {
+                        button.classList.add('disabled');
+                        button.style.pointerEvents = 'none';
+                    } else {
+                        button.addEventListener('click', () => this.selectNumber(number));
+                    }
+                    
                     optionsContainer.appendChild(button);
                 });
             }
 
 
-            async selectOption(selectedOption) {
-                if (this.isGameWon || this.isAnswering) return;
+            async selectNumber(selectedNumber) {
+                if (this.isGameWon || this.isGameOver || this.isSelecting) return;
                 
                 // 检查是否已登录
                 if (!this.isLoggedIn) {
@@ -912,89 +914,128 @@
                     return;
                 }
                 
-                // 首次有效移动前，先记录一次开局（Worker-only，无 Gist）
+                // 首次有效移动前，先记录一次开局
                 if (!this.hasAttemptRecorded) {
                     const ok = await this.beginAttemptIfAllowed().catch(() => false);
                     if (!ok) { return; }
                     this.hasAttemptRecorded = true;
                 }
                 
-                this.isAnswering = true;
+                this.isSelecting = true;
                 this.moveCount++;
-                this.answeredQuestions++;
-                document.getElementById('moveCount').textContent = this.moveCount;
+                this.selectedNumbers.push(selectedNumber);
+                this.updateMoveCount();
                 
                 // 首次有效移动时启动计时
                 this.startTimerIfNeeded();
                 
-                // 检查答案是否正确
-                const isCorrect = selectedOption === this.currentQuestion.correctAnswer;
+                // 检查是否选中炸弹
+                const isBomb = selectedNumber === this.bombNumber;
                 
-                // 显示答案结果
-                this.showAnswerResult(selectedOption, isCorrect);
+                // 显示选择结果
+                this.showSelectionResult(selectedNumber, isBomb);
                 
-                if (isCorrect) {
-                    this.correctAnswers++;
+                if (isBomb) {
+                    // 选中炸弹，游戏结束
+                    this.isGameOver = true;
+                    setTimeout(() => {
+                        this.showGameOverMessage();
+                    }, 1000);
+                } else {
+                    // 安全选择，更新范围
+                    this.safeChoices++;
+                    this.updateRange(selectedNumber);
                     this.updateProgress();
-                }
-                
-                // 延迟后生成下一题或结束游戏
-                setTimeout(() => {
-                    this.isAnswering = false;
-                    if (this.correctAnswers >= 6) {
-                        this.checkWin();
+                    
+                    // 检查是否获胜
+                    if (this.safeChoices >= MAX_SAFE_CHOICES) {
+                        this.isGameWon = true;
+                        setTimeout(() => {
+                            this.checkWin();
+                        }, 1000);
                     } else {
-                        this.generateNewQuestion();
+                        // 继续游戏
+                        setTimeout(() => {
+                            this.isSelecting = false;
+                            this.renderGame();
+                        }, 1000);
                     }
-                }, 300);
+                }
             }
 
-            showAnswerResult(selectedOption, isCorrect) {
+            showSelectionResult(selectedNumber, isBomb) {
                 const buttons = document.querySelectorAll('.option-button');
                 buttons.forEach(button => {
                     button.style.pointerEvents = 'none'; // 禁用点击
-                    if (button.dataset.option === this.currentQuestion.correctAnswer) {
-                        button.classList.add('correct');
-                    } else if (button.dataset.option === selectedOption && !isCorrect) {
-                        button.classList.add('wrong');
+                    const number = parseInt(button.dataset.number);
+                    if (number === selectedNumber) {
+                        if (isBomb) {
+                            button.classList.add('bomb');
+                        } else {
+                            button.classList.add('safe');
+                        }
                     }
                 });
             }
 
+            updateRange(selectedNumber) {
+                if (selectedNumber < this.bombNumber) {
+                    // 选择的数字小于炸弹，更新最小范围
+                    this.currentRange.min = selectedNumber + 1;
+                } else if (selectedNumber > this.bombNumber) {
+                    // 选择的数字大于炸弹，更新最大范围
+                    this.currentRange.max = selectedNumber - 1;
+                }
+            }
+
+            updateMoveCount() {
+                document.getElementById('moveCount').textContent = this.moveCount;
+            }
+
+            showGameOverMessage() {
+                document.getElementById('finalMoves').textContent = this.moveCount;
+                document.getElementById('finalTime').textContent = this.formatMs(this.elapsedMs);
+                document.getElementById('overlay').style.display = 'block';
+                document.getElementById('winMessage').style.display = 'block';
+                document.getElementById('winMessage').querySelector('h2').textContent = '💥 游戏结束！';
+                document.getElementById('winMessage').querySelector('p').textContent = `你选中了炸弹数字 ${this.bombNumber}！`;
+            }
+
             updateProgress() {
                 const progressFill = document.getElementById('progressFill');
-                const percentage = (this.correctAnswers / 6) * 100;
+                const percentage = (this.safeChoices / MAX_SAFE_CHOICES) * 100;
                 progressFill.style.width = `${percentage}%`;
-                progressFill.textContent = `${this.correctAnswers}/6`;
+                progressFill.textContent = `${this.safeChoices}/${MAX_SAFE_CHOICES}`;
             }
 
 
             shufflePuzzle() {
                 // 重置游戏状态
                 this.resetPuzzle();
-                // 生成新题目
-                this.generateNewQuestion();
+                // 开始新游戏
+                this.startNewGame();
             }
-
 
             resetPuzzle() {
                 this.moveCount = 0;
-                this.correctAnswers = 0;
-                this.answeredQuestions = 0;
-                this.isAnswering = false;
-                this.currentQuestion = null;
+                this.safeChoices = 0;
+                this.isSelecting = false;
+                this.bombNumber = null;
                 this.isGameWon = false;
-                document.getElementById('moveCount').textContent = this.moveCount;
+                this.isGameOver = false;
+                this.currentRange = { min: 1, max: 10 };
+                this.selectedNumbers = [];
+                this.updateMoveCount();
                 this.updateProgress();
                 // 重置计时显示与流程状态
                 this.resetTimer();
                 this.hasAttemptRecorded = false;
-                this.createQuestionInterface();
+                this.createGameInterface();
             }
 
             checkWin() {
-                // 检查是否答对了6道题目
-                if (this.correctAnswers >= 6) {
+                // 检查是否选择了3次安全数字
+                if (this.safeChoices >= MAX_SAFE_CHOICES) {
                     this.isGameWon = true;
                     // 停止计时并计算用时
                     this.stopTimer();
@@ -1012,6 +1053,9 @@
                 document.getElementById('finalTime').textContent = this.formatMs(this.elapsedMs);
                 document.getElementById('overlay').style.display = 'block';
                 document.getElementById('winMessage').style.display = 'block';
+                // 重置成功消息内容
+                document.getElementById('winMessage').querySelector('h2').textContent = '🎉 恭喜完成！';
+                document.getElementById('winMessage').querySelector('p').textContent = '你成功避开了所有炸弹！';
             }
 
             updateUserInfo() {
@@ -1556,11 +1600,11 @@
 
         // 初始化游戏
         window.addEventListener('load', () => {
-            game = new ColorTrapGame();
+            game = new NumberBombGame();
         });
 
         // ====== 渲染 Worker 返回的排行榜（独立于 Gist 结构） ======
-        ColorTrapGame.prototype.renderLeaderboardFromWorker = function(list) {
+        NumberBombGame.prototype.renderLeaderboardFromWorker = function(list) {
             try {
                 const leaderboardList = document.getElementById('leaderboardList');
                 const currentBar = document.getElementById('leaderboardCurrentUser');
