@@ -1205,16 +1205,16 @@
                     return;
                 }
                 
-                // 排序：时间升序，其次步数升序（兼容旧数据）
+                // 排序：步数降序，其次时间升序（兼容旧数据）
                 entries.sort((a, b) => {
                     const aBest = a[1].best || {};
                     const bBest = b[1].best || {};
+                    const aSteps = typeof aBest.steps === 'number' ? aBest.steps : 0;
+                    const bSteps = typeof bBest.steps === 'number' ? bBest.steps : 0;
+                    if (aSteps !== bSteps) return bSteps - aSteps; // 步数降序
                     const aTime = typeof aBest.timeMs === 'number' ? aBest.timeMs : Infinity;
                     const bTime = typeof bBest.timeMs === 'number' ? bBest.timeMs : Infinity;
-                    if (aTime !== bTime) return aTime - bTime;
-                    const aSteps = typeof aBest.steps === 'number' ? aBest.steps : Infinity;
-                    const bSteps = typeof bBest.steps === 'number' ? bBest.steps : Infinity;
-                    return aSteps - bSteps;
+                    return aTime - bTime; // 时间升序
                 });
                 
                 leaderboardList.innerHTML = entries.map(([userId, data], index) => {
@@ -1629,14 +1629,14 @@
                     seen.add(key);
                     deduped.push(row);
                 }
-                // 排序：时间升序，其次步数升序（与后端一致）
+                // 排序：步数降序，其次时间升序（与后端一致）
                 deduped.sort((a, b) => {
+                    const sa = typeof a.moves === 'number' ? a.moves : 0;
+                    const sb = typeof b.moves === 'number' ? b.moves : 0;
+                    if (sa !== sb) return sb - sa; // 步数降序
                     const ta = typeof a.timeMs === 'number' ? a.timeMs : Infinity;
                     const tb = typeof b.timeMs === 'number' ? b.timeMs : Infinity;
-                    if (ta !== tb) return ta - tb;
-                    const sa = typeof a.moves === 'number' ? a.moves : Infinity;
-                    const sb = typeof b.moves === 'number' ? b.moves : Infinity;
-                    return sa - sb;
+                    return ta - tb; // 时间升序
                 });
                 const html = deduped.map((row, index) => {
                     const rank = index + 1;
