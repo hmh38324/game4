@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game4 每日限制功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #5a6fd8;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 Game4 每日限制功能测试</h1>
+    
+    <div class="test-container">
+        <h2>📋 测试说明</h2>
+        <p>此页面用于测试Game4的每日限制功能，包括：</p>
+        <ul>
+            <li>时区计算准确性</li>
+            <li>用户标识生成</li>
+            <li>每日限制检查</li>
+            <li>游戏记录保存</li>
+            <li>跨游戏同步</li>
+        </ul>
+    </div>
+
+    <div class="test-container">
+        <div class="test-section">
+            <h3>1. 时区测试</h3>
+            <button onclick="testTimezone()">测试中国时区</button>
+            <div id="timezoneResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. 用户标识测试</h3>
+            <button onclick="testUserKey()">测试用户标识生成</button>
+            <div id="userKeyResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. 每日限制检查测试</h3>
+            <button onclick="testDailyLimit()">测试每日限制检查</button>
+            <div id="dailyLimitResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. 游戏记录测试</h3>
+            <button onclick="testGameRecord()">测试游戏记录保存</button>
+            <div id="gameRecordResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>5. 完整流程测试</h3>
+            <button onclick="testFullFlow()">测试完整流程</button>
+            <div id="fullFlowResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>6. 数据查看</h3>
+            <button onclick="viewData()">查看存储数据</button>
+            <button onclick="clearData()">清空测试数据</button>
+            <div id="dataResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // 每日限制管理器（从主游戏复制）
+        class DailyLimitManager {
+            constructor() {
+                this.gameId = 'game4'; // 当前游戏ID
+                this.storageKey = 'daily_limit_data';
+            }
+
+            // 获取中国时区的今天日期
+            getChinaToday() {
+                const now = new Date();
+                const chinaTime = new Intl.DateTimeFormat('en-CA', {
+                    timeZone: 'Asia/Shanghai',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                }).format(now);
+                return chinaTime; // 格式: YYYY-MM-DD
+            }
+
+            // 获取用户唯一标识
+            getUserKey(employeeId, employeeName) {
+                return `${employeeId}_${employeeName}`;
+            }
+
+            // 从localStorage获取数据
+            getData() {
+                try {
+                    const data = localStorage.getItem(this.storageKey);
+                    const parsed = data ? JSON.parse(data) : { users: {} };
+                    
+                    // 验证数据结构
+                    if (!parsed.users || typeof parsed.users !== 'object') {
+                        return { users: {} };
+                    }
+                    
+                    return parsed;
+                } catch (error) {
+                    console.error('获取本地数据失败:', error);
+                    return { users: {} };
+                }
+            }
+
+            // 保存数据到localStorage
+            saveData(data) {
+                try {
+                    localStorage.setItem(this.storageKey, JSON.stringify(data));
+                    return true;
+                } catch (error) {
+                    console.error('保存本地数据失败:', error);
+                    return false;
+                }
+            }
+
+            // 检查用户今日是否已玩游戏
+            checkDailyLimit(employeeId, employeeName) {
+                const userKey = this.getUserKey(employeeId, employeeName);
+                const today = this.getChinaToday();
+                
+                try {
+                    const data = this.getData();
+                    const user = data.users[userKey];
+                    
+                    if (user && user.lastPlayDate === today) {
+                        return {
+                            canPlay: false,
+                            reason: '今日已玩过游戏，请明天00:00后再试！',
+                            playedGames: user.games || {}
+                        };
+                    }
+                    
+                    return { canPlay: true };
+                } catch (error) {
+                    console.error('检查每日限制失败:', error);
+                    // 出错时允许游戏，避免影响用户体验
+                    return { canPlay: true };
+                }
+            }
+
+            // 记录用户今日游戏
+            recordGamePlay(employeeId, employeeName) {
+                const userKey = this.getUserKey(employeeId, employeeName);
+                const today = this.getChinaToday();
+                
+                try {
+                    const data = this.getData();
+                    
+                    if (!data.users[userKey]) {
+                        data.users[userKey] = {
+                            lastPlayDate: today,
+                            games: {}
+                        };
+                    }
+                    
+                    // 更新最后游戏日期和当前游戏记录
+                    data.users[userKey].lastPlayDate = today;
+                    data.users[userKey].games[this.gameId] = true;
+                    
+                    // 保存数据
+                    const success = this.saveData(data);
+                    
+                    return success;
+                } catch (error) {
+                    console.error('记录游戏失败:', error);
+                    return false;
+                }
+            }
+        }
+
+        // 创建管理器实例
+        const manager = new DailyLimitManager();
+
+        // 测试函数
+        function testTimezone() {
+            const today = manager.getChinaToday();
+            const now = new Date();
+            const result = document.getElementById('timezoneResult');
+            
+            result.innerHTML = `
+                <strong>中国时区今天日期:</strong> ${today}<br>
+                <strong>当前时间:</strong> ${now.toLocaleString('zh-CN', {timeZone: 'Asia/Shanghai'})}<br>
+                <strong>格式验证:</strong> ${/^\d{4}-\d{2}-\d{2}$/.test(today) ? '✅ 正确' : '❌ 错误'}
+            `;
+            result.className = 'result success';
+            result.style.display = 'block';
+        }
+
+        function testUserKey() {
+            const testCases = [
+                { id: '12345', name: '张三' },
+                { id: '67890', name: '李四' },
+                { id: '11111', name: '王五' }
+            ];
+            
+            let html = '<strong>用户标识测试结果:</strong><br>';
+            testCases.forEach(testCase => {
+                const userKey = manager.getUserKey(testCase.id, testCase.name);
+                html += `工号: ${testCase.id}, 姓名: ${testCase.name} → 标识: ${userKey}<br>`;
+            });
+            
+            const result = document.getElementById('userKeyResult');
+            result.innerHTML = html;
+            result.className = 'result success';
+            result.style.display = 'block';
+        }
+
+        function testDailyLimit() {
+            const testUser = { id: '99999', name: '测试用户' };
+            
+            // 第一次检查 - 应该允许
+            const check1 = manager.checkDailyLimit(testUser.id, testUser.name);
+            
+            // 记录游戏
+            manager.recordGamePlay(testUser.id, testUser.name);
+            
+            // 第二次检查 - 应该限制
+            const check2 = manager.checkDailyLimit(testUser.id, testUser.name);
+            
+            const result = document.getElementById('dailyLimitResult');
+            result.innerHTML = `
+                <strong>每日限制测试结果:</strong><br>
+                第一次检查: ${check1.canPlay ? '✅ 允许游戏' : '❌ 限制游戏'}<br>
+                记录游戏后<br>
+                第二次检查: ${check2.canPlay ? '❌ 应该限制但允许了' : '✅ 正确限制游戏'}<br>
+                ${!check2.canPlay ? `限制原因: ${check2.reason}` : ''}
+            `;
+            result.className = check2.canPlay ? 'result error' : 'result success';
+            result.style.display = 'block';
+        }
+
+        function testGameRecord() {
+            const testUser = { id: '88888', name: '记录测试' };
+            
+            // 记录游戏
+            const success = manager.recordGamePlay(testUser.id, testUser.name);
+            
+            // 获取数据验证
+            const data = manager.getData();
+            const userKey = manager.getUserKey(testUser.id, testUser.name);
+            const user = data.users[userKey];
+            
+            const result = document.getElementById('gameRecordResult');
+            result.innerHTML = `
+                <strong>游戏记录测试结果:</strong><br>
+                保存状态: ${success ? '✅ 成功' : '❌ 失败'}<br>
+                用户数据存在: ${user ? '✅ 是' : '❌ 否'}<br>
+                ${user ? `最后游戏日期: ${user.lastPlayDate}<br>游戏记录: ${JSON.stringify(user.games)}` : ''}
+            `;
+            result.className = success && user ? 'result success' : 'result error';
+            result.style.display = 'block';
+        }
+
+        function testFullFlow() {
+            const testUser = { id: '77777', name: '完整测试' };
+            
+            // 清空该用户的测试数据
+            const data = manager.getData();
+            const userKey = manager.getUserKey(testUser.id, testUser.name);
+            delete data.users[userKey];
+            manager.saveData(data);
+            
+            // 第一次检查
+            const check1 = manager.checkDailyLimit(testUser.id, testUser.name);
+            
+            // 记录游戏
+            const recordSuccess = manager.recordGamePlay(testUser.id, testUser.name);
+            
+            // 第二次检查
+            const check2 = manager.checkDailyLimit(testUser.id, testUser.name);
+            
+            // 验证数据
+            const finalData = manager.getData();
+            const finalUser = finalData.users[userKey];
+            
+            const result = document.getElementById('fullFlowResult');
+            result.innerHTML = `
+                <strong>完整流程测试结果:</strong><br>
+                1. 首次检查: ${check1.canPlay ? '✅ 允许' : '❌ 限制'}<br>
+                2. 记录游戏: ${recordSuccess ? '✅ 成功' : '❌ 失败'}<br>
+                3. 再次检查: ${check2.canPlay ? '❌ 应该限制' : '✅ 正确限制'}<br>
+                4. 数据验证: ${finalUser && finalUser.games.game4 ? '✅ 数据正确' : '❌ 数据错误'}<br>
+                <strong>总体结果:</strong> ${check1.canPlay && recordSuccess && !check2.canPlay && finalUser && finalUser.games.game4 ? '✅ 全部通过' : '❌ 存在问题'}
+            `;
+            result.className = (check1.canPlay && recordSuccess && !check2.canPlay && finalUser && finalUser.games.game4) ? 'result success' : 'result error';
+            result.style.display = 'block';
+        }
+
+        function viewData() {
+            const data = manager.getData();
+            const result = document.getElementById('dataResult');
+            result.innerHTML = `
+                <strong>当前存储数据:</strong><br>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            result.className = 'result info';
+            result.style.display = 'block';
+        }
+
+        function clearData() {
+            localStorage.removeItem(manager.storageKey);
+            const result = document.getElementById('dataResult');
+            result.innerHTML = '<strong>测试数据已清空</strong>';
+            result.className = 'result info';
+            result.style.display = 'block';
+        }
+
+        // 页面加载时显示当前时区信息
+        window.addEventListener('load', () => {
+            const today = manager.getChinaToday();
+            console.log('Game4 每日限制测试页面已加载');
+            console.log('当前中国时区日期:', today);
+        });
+    </script>
+</body>
+</html>
