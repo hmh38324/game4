@@ -946,7 +946,7 @@
                     this.updateRemainingAttemptsUI();
                     setTimeout(() => {
                         this.showGameOverMessage();
-                    }, 1000);
+                    }, 500);
                 } else {
                     // 安全选择，更新范围
                     this.safeChoices++;
@@ -958,13 +958,13 @@
                         this.isGameWon = true;
                         setTimeout(() => {
                             this.checkWin();
-                        }, 1000);
+                        }, 500);
                     } else {
                         // 继续游戏
                         setTimeout(() => {
                             this.isSelecting = false;
                             this.renderGame();
-                        }, 1000);
+                        }, 500);
                     }
                 }
             }
