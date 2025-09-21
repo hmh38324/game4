@@ -57,7 +57,7 @@ export default {
          SELECT userId, nickname, moves, timeMs, createdAt, completedCount
          FROM ranked
          WHERE rn = 1
-         ORDER BY timeMs ASC, moves ASC, createdAt ASC
+         ORDER BY moves DESC, timeMs ASC, createdAt ASC
          LIMIT ?`
       )
         .bind(limit)
