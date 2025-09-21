@@ -1,0 +1,17 @@
+{
+  "name": "game4-worker",
+  "version": "1.0.0",
+  "description": "华容道游戏4 - Cloudflare Worker",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "d1:create": "wrangler d1 create game4_leaderboard",
+    "d1:migrate": "wrangler d1 execute game4_leaderboard --file=./schema.sql",
+    "kv:create": "wrangler kv:namespace create CACHE"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20231218.0",
+    "typescript": "^5.3.0"
+  }
+}
