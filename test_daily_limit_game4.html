@@ -322,7 +322,7 @@
             // 第一次检查
             const check1 = manager.checkDailyLimit(testUser.id, testUser.name);
             
-            // 记录游戏
+            // 记录游戏（模拟点爆炸弹的情况）
             const recordSuccess = manager.recordGamePlay(testUser.id, testUser.name);
             
             // 第二次检查
@@ -339,6 +339,7 @@
                 2. 记录游戏: ${recordSuccess ? '✅ 成功' : '❌ 失败'}<br>
                 3. 再次检查: ${check2.canPlay ? '❌ 应该限制' : '✅ 正确限制'}<br>
                 4. 数据验证: ${finalUser && finalUser.games.game4 ? '✅ 数据正确' : '❌ 数据错误'}<br>
+                <strong>测试说明:</strong> 点爆炸弹也算玩过游戏，今天不能再玩<br>
                 <strong>总体结果:</strong> ${check1.canPlay && recordSuccess && !check2.canPlay && finalUser && finalUser.games.game4 ? '✅ 全部通过' : '❌ 存在问题'}
             `;
             result.className = (check1.canPlay && recordSuccess && !check2.canPlay && finalUser && finalUser.games.game4) ? 'result success' : 'result error';

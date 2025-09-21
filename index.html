@@ -862,6 +862,15 @@
                     this.isGameOver = true;
                     // 停止计时
                     this.stopTimer();
+                    
+                    // 记录用户今日已玩游戏（点爆炸弹也算玩过）
+                    if (this.isLoggedIn && this.currentUser) {
+                        this.dailyLimitManager.recordGamePlay(
+                            this.currentUser.工号, 
+                            this.currentUser.姓名
+                        );
+                    }
+                    
                     setTimeout(() => {
                         this.showGameOverMessage();
                     }, 500);
