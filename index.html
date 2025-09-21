@@ -922,9 +922,7 @@
                 }
                 
                 this.isSelecting = true;
-                this.moveCount++;
                 this.selectedNumbers.push(selectedNumber);
-                this.updateMoveCount();
                 
                 // 首次有效移动时启动计时
                 this.startTimerIfNeeded();
@@ -940,7 +938,7 @@
                     this.isGameOver = true;
                     // 停止计时
                     this.stopTimer();
-                    // 记录成绩到排行榜
+                    // 记录成绩到排行榜（不增加moveCount，因为这是失败的选择）
                     this.updateLeaderboard();
                     // 更新剩余次数显示
                     this.updateRemainingAttemptsUI();
@@ -948,10 +946,12 @@
                         this.showGameOverMessage();
                     }, 500);
                 } else {
-                    // 安全选择，更新范围
+                    // 安全选择，增加有效选择次数
+                    this.moveCount++;
                     this.safeChoices++;
                     this.updateRange(selectedNumber);
                     this.updateProgress();
+                    this.updateMoveCount();
                     
                     // 检查是否获胜
                     if (this.safeChoices >= MAX_SAFE_CHOICES) {
