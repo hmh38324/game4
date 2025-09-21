@@ -938,6 +938,12 @@
                 if (isBomb) {
                     // 选中炸弹，游戏结束
                     this.isGameOver = true;
+                    // 停止计时
+                    this.stopTimer();
+                    // 记录成绩到排行榜
+                    this.updateLeaderboard();
+                    // 更新剩余次数显示
+                    this.updateRemainingAttemptsUI();
                     setTimeout(() => {
                         this.showGameOverMessage();
                     }, 1000);
@@ -1147,6 +1153,7 @@
                     const newRecord = { name: nickname, timeMs, steps: moves, timestamp: new Date().toISOString() };
                     this.completeAttempt(newRecord);
                     this.updateRemainingAttemptsUI();
+                    console.log('成绩已提交到Worker:', { userId, nickname, moves, timeMs });
                     return;
                 }
                 
