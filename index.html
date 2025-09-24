@@ -583,6 +583,25 @@
         }
 
         @media (max-width: 768px) {
+            .controls {
+                display: flex;
+                flex-wrap: nowrap;
+                justify-content: center;
+                gap: 8px;
+                margin-bottom: 20px;
+            }
+            
+            .controls button {
+                flex: 1;
+                min-width: 0;
+                padding: 10px 8px;
+                margin: 0 2px;
+                font-size: 14px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
             .game-content {
                 flex-direction: column;
                 gap: 20px;
@@ -629,6 +648,16 @@
         }
 
         @media (max-width: 480px) {
+            .controls {
+                gap: 4px;
+            }
+            
+            .controls button {
+                padding: 8px 4px;
+                font-size: 12px;
+                margin: 0 1px;
+            }
+            
             .puzzle-section {
                 width: 100%;
                 display: flex;
@@ -685,6 +714,12 @@
         }
 
         @media (max-width: 360px) {
+            .controls button {
+                padding: 6px 2px;
+                font-size: 11px;
+                margin: 0;
+            }
+            
             .question-container {
                 max-width: 300px;
                 padding: 12px;
