@@ -415,7 +415,21 @@
             }
             
             .question-container {
-                width: 400px;
+                width: 100%;
+                max-width: 400px;
+                padding: 20px;
+            }
+            
+            .options-container {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 8px;
+                margin-top: 15px;
+            }
+            
+            .option-button {
+                padding: 15px 8px;
+                font-size: 18px;
+                min-height: 60px;
             }
             
             .progress-container {
@@ -428,7 +442,7 @@
             
             .game-container {
                 max-width: 100%;
-                padding: 20px;
+                padding: 15px;
             }
         }
 
@@ -441,7 +455,22 @@
             }
             
             .question-container {
-                width: 320px;
+                width: 100%;
+                max-width: 320px;
+                padding: 15px;
+            }
+            
+            .options-container {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 6px;
+                margin-top: 12px;
+            }
+            
+            .option-button {
+                padding: 12px 4px;
+                font-size: 16px;
+                min-height: 50px;
+                border-width: 2px;
             }
             
             .progress-container {
@@ -450,6 +479,10 @@
             
             h1 {
                 font-size: 1.8em;
+            }
+            
+            .game-container {
+                padding: 10px;
             }
             
             .win-message {
@@ -466,6 +499,38 @@
             .win-message p {
                 font-size: 14px;
                 margin-bottom: 15px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .question-container {
+                max-width: 300px;
+                padding: 12px;
+            }
+            
+            .options-container {
+                gap: 4px;
+                margin-top: 10px;
+            }
+            
+            .option-button {
+                padding: 10px 2px;
+                font-size: 14px;
+                min-height: 45px;
+            }
+            
+            .game-container {
+                padding: 8px;
+            }
+            
+            h1 {
+                font-size: 1.6em;
+                margin-bottom: 15px;
+            }
+            
+            .game-info {
+                font-size: 14px;
+                margin-bottom: 20px;
             }
         }
     </style>
