@@ -587,23 +587,26 @@
                 display: flex;
                 flex-wrap: nowrap;
                 justify-content: space-between;
-                gap: 8px;
+                gap: 6px;
                 margin-bottom: 20px;
                 width: 100%;
                 max-width: 100%;
-                padding: 0 10px;
             }
             
             .controls button {
                 flex: 1;
                 min-width: 0;
-                padding: 12px 8px;
+                padding: 12px 6px;
                 margin: 0;
-                font-size: 14px;
+                font-size: 13px;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 border-radius: 20px;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
             
             .game-content {
@@ -653,16 +656,16 @@
 
         @media (max-width: 480px) {
             .controls {
-                gap: 6px;
-                width: 100%;
-                max-width: 100%;
-                padding: 0 8px;
+                gap: 4px;
+                padding: 0 5px;
             }
             
             .controls button {
-                padding: 10px 6px;
-                font-size: 13px;
+                padding: 10px 4px;
+                font-size: 12px;
                 margin: 0;
+                min-height: 40px;
+                border-radius: 18px;
             }
             
             .puzzle-section {
@@ -722,16 +725,16 @@
 
         @media (max-width: 360px) {
             .controls {
-                gap: 4px;
-                width: 100%;
-                max-width: 100%;
-                padding: 0 6px;
+                gap: 3px;
+                padding: 0 3px;
             }
             
             .controls button {
-                padding: 8px 4px;
-                font-size: 12px;
+                padding: 8px 2px;
+                font-size: 11px;
                 margin: 0;
+                min-height: 36px;
+                border-radius: 16px;
             }
             
             .question-container {
