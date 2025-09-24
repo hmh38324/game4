@@ -586,20 +586,24 @@
             .controls {
                 display: flex;
                 flex-wrap: nowrap;
-                justify-content: center;
+                justify-content: space-between;
                 gap: 8px;
                 margin-bottom: 20px;
+                width: 100%;
+                max-width: 100%;
+                padding: 0 10px;
             }
             
             .controls button {
                 flex: 1;
                 min-width: 0;
-                padding: 10px 8px;
-                margin: 0 2px;
+                padding: 12px 8px;
+                margin: 0;
                 font-size: 14px;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                border-radius: 20px;
             }
             
             .game-content {
@@ -649,13 +653,16 @@
 
         @media (max-width: 480px) {
             .controls {
-                gap: 4px;
+                gap: 6px;
+                width: 100%;
+                max-width: 100%;
+                padding: 0 8px;
             }
             
             .controls button {
-                padding: 8px 4px;
-                font-size: 12px;
-                margin: 0 1px;
+                padding: 10px 6px;
+                font-size: 13px;
+                margin: 0;
             }
             
             .puzzle-section {
@@ -714,10 +721,17 @@
         }
 
         @media (max-width: 360px) {
+            .controls {
+                gap: 2px;
+                width: 100%;
+                max-width: 100%;
+            }
+            
             .controls button {
-                padding: 6px 2px;
-                font-size: 11px;
+                padding: 5px 1px;
+                font-size: 10px;
                 margin: 0;
+                max-width: calc(33.333% - 1px);
             }
             
             .question-container {
